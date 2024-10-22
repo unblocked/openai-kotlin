@@ -14,10 +14,13 @@ plugins {
     alias(libs.plugins.maven.publish) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.dokka)
+    // Ensure the maven-publish plugin is applied globally
+    id("maven-publish")
 }
 
 subprojects {
     apply(plugin = "com.diffplug.spotless")
+    apply(plugin = "maven-publish")
     configure<SpotlessExtension> {
         kotlin {
             target("**/*.kt")
@@ -46,7 +49,17 @@ subprojects {
     tasks.withType<KotlinJsTest>().configureEach {
         environment("LIB_ROOT", rootDir.toString())
     }
+
+    publishing {
+        repositories {
+            maven {
+                url = uri("${rootProject.rootDir}/.maven")
+            }
+        }
+    }
 }
+
+
 
 tasks.withType<DokkaMultiModuleTask>() {
     outputDirectory.set(projectDir.resolve("docs"))
