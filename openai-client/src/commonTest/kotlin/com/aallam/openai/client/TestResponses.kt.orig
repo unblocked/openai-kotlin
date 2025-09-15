@@ -4,7 +4,11 @@ import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.api.response.*
 import com.aallam.openai.api.exception.InvalidRequestException
+<<<<<<< HEAD
+=======
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.test.runTest
+>>>>>>> 653b889 (Streaming support for responses)
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -38,18 +42,24 @@ class TestResponses : TestOpenAI() {
         // Validate output structure
         assertTrue(response.output.isNotEmpty())
         val messageOutput = response.output.find { it is ResponseOutputItem.Message } as? ResponseOutputItem.Message
-        assertNotNull(messageOutput?.id)
+<<<<<<< HEAD
+        assertNotNull(messageOutput)
         assertNotNull(messageOutput.id)
+=======
+        assertNotNull(messageOutput?.id)
+>>>>>>> 653b889 (Streaming support for responses)
         assertEquals(ChatRole.Assistant, messageOutput.role)
         assertTrue(messageOutput.content.isNotEmpty())
         
         // Validate firstMessageTest helper
         assertNotNull(response.firstMessageText)
         assertTrue(response.firstMessageText?.isNotEmpty() == true)
+<<<<<<< HEAD
+=======
     }
 
     @Test
-    fun testResponsesStreaming() = test {
+    fun testResponsesStreaming() = runTest {
         val request = responseRequest {
             model = ModelId("gpt-5")
             reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
@@ -96,6 +106,7 @@ class TestResponses : TestOpenAI() {
         // Verify final response has usage information
         val finalChunk = chunks.lastOrNull { it.type == "response.completed" }
         assertNotNull(finalChunk?.response?.usage, "Final chunk should have usage information")
+>>>>>>> 653b889 (Streaming support for responses)
     }
 
     @Test
@@ -441,78 +452,5 @@ class TestResponses : TestOpenAI() {
         assertFailsWith<InvalidRequestException> {
             openAI.createResponse(request)
         }
-    }
-
-    @Test
-    fun testResponsesWithMaxOutputTokens() = test {
-        val request = responseRequest {
-            model = ModelId("gpt-5")
-            maxOutputTokens = 100 // Limit output to 100 tokens
-            input {
-                message {
-                    role = ChatRole.User
-                    content = "Explain quantum computing in simple terms."
-                }
-            }
-            store = false
-        }
-
-        val response = openAI.createResponse(request)
-
-        // Validate basic response structure
-        assertNotNull(response)
-        assertNotNull(response.id)
-        assertEquals("response", response.objectType)
-        assertEquals("completed", response.status)
-
-        // Validate request parameters were set correctly
-        assertEquals(100, request.maxOutputTokens)
-        assertEquals(ModelId("gpt-5"), request.model)
-        assertEquals(false, request.store)
-
-        // Validate output structure - reasoning models return reasoning output, not message output
-        assertTrue(response.output.isNotEmpty())
-        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
-        assertNotNull(reasoningOutput)
-        assertNotNull(reasoningOutput.id)
-
-        // For reasoning models, the actual response text might be in the reasoning summary or not present
-        // The key is that we got a valid response with the correct structure
-
-        // Validate usage information shows limited output tokens
-        assertNotNull(response.usage)
-        assertTrue((response.usage?.completionTokens ?: 0) <= 100) // Should be within the limit
-        assertTrue((response.usage?.completionTokens ?: 0) > 0) // Should have generated some tokens
-    }
-
-    @Test
-    fun testResponsesWithMaxOutputTokensAndInstructions() = test {
-        val response = openAI.createResponse(
-            responseRequest {
-                model = ModelId("gpt-5")
-                maxOutputTokens = 50
-                instructions = "Be very concise and use simple language."
-                input {
-                    message(ChatRole.User, "What is artificial intelligence?")
-                }
-            }
-        )
-
-        // Validate basic response structure
-        assertNotNull(response.id)
-        assertEquals("response", response.objectType)
-        assertEquals("completed", response.status)
-        assertNotNull(response.model)
-
-        // Validate output structure - reasoning models return reasoning output, not message output
-        assertTrue(response.output.isNotEmpty())
-        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
-        assertNotNull(reasoningOutput)
-        assertNotNull(reasoningOutput.id)
-
-        // Validate usage information shows limited output tokens (even more restrictive)
-        assertNotNull(response.usage)
-        assertTrue((response.usage?.completionTokens ?: 0) <= 50) // Should be within the stricter limit
-        // Note: Some reasoning models may return 0 tokens for certain requests, so we just check the limit
     }
 }
