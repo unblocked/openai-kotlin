@@ -64,16 +64,4 @@ public data class ResponseChunk(
     @SerialName("content_index") public val contentIndex: Int? = null,
 )
 
-/**
- * Streaming event types for responses.
- */
-public object ResponseStreamEvent {
-    public const val RESPONSE_CREATED: String = "response.created"
-    public const val RESPONSE_IN_PROGRESS: String = "response.in_progress"
-    public const val RESPONSE_OUTPUT_ITEM_ADDED: String = "response.output_item.added"
-    public const val RESPONSE_REASONING_SUMMARY_PART_ADDED: String = "response.reasoning_summary_part.added"
-    public const val RESPONSE_REASONING_SUMMARY_TEXT_DELTA: String = "response.reasoning_summary_text.delta"
-    public const val RESPONSE_MESSAGE_CONTENT_PART_ADDED: String = "response.message_content.part.added"
-    public const val RESPONSE_MESSAGE_CONTENT_TEXT_DELTA: String = "response.message_content.text.delta"
-    public const val RESPONSE_COMPLETED: String = "response.completed"
-}
+
