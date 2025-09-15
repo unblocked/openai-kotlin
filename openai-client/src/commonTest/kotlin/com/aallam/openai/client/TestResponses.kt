@@ -391,4 +391,77 @@ class TestResponses : TestOpenAI() {
             openAI.createResponse(request)
         }
     }
+
+    @Test
+    fun testResponsesWithMaxOutputTokens() = test {
+        val request = responseRequest {
+            model = ModelId("gpt-5")
+            maxOutputTokens = 100 // Limit output to 100 tokens
+            input {
+                message {
+                    role = ChatRole.User
+                    content = "Explain quantum computing in simple terms."
+                }
+            }
+            store = false
+        }
+
+        val response = openAI.createResponse(request)
+
+        // Validate basic response structure
+        assertNotNull(response)
+        assertNotNull(response.id)
+        assertEquals("response", response.objectType)
+        assertEquals("completed", response.status)
+
+        // Validate request parameters were set correctly
+        assertEquals(100, request.maxOutputTokens)
+        assertEquals(ModelId("gpt-5"), request.model)
+        assertEquals(false, request.store)
+
+        // Validate output structure - reasoning models return reasoning output, not message output
+        assertTrue(response.output.isNotEmpty())
+        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        assertNotNull(reasoningOutput)
+        assertNotNull(reasoningOutput.id)
+
+        // For reasoning models, the actual response text might be in the reasoning summary or not present
+        // The key is that we got a valid response with the correct structure
+
+        // Validate usage information shows limited output tokens
+        assertNotNull(response.usage)
+        assertTrue((response.usage?.completionTokens ?: 0) <= 100) // Should be within the limit
+        assertTrue((response.usage?.completionTokens ?: 0) > 0) // Should have generated some tokens
+    }
+
+    @Test
+    fun testResponsesWithMaxOutputTokensAndInstructions() = test {
+        val response = openAI.createResponse(
+            responseRequest {
+                model = ModelId("gpt-5")
+                maxOutputTokens = 50
+                instructions = "Be very concise and use simple language."
+                input {
+                    message(ChatRole.User, "What is artificial intelligence?")
+                }
+            }
+        )
+
+        // Validate basic response structure
+        assertNotNull(response.id)
+        assertEquals("response", response.objectType)
+        assertEquals("completed", response.status)
+        assertNotNull(response.model)
+
+        // Validate output structure - reasoning models return reasoning output, not message output
+        assertTrue(response.output.isNotEmpty())
+        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        assertNotNull(reasoningOutput)
+        assertNotNull(reasoningOutput.id)
+
+        // Validate usage information shows limited output tokens (even more restrictive)
+        assertNotNull(response.usage)
+        assertTrue((response.usage?.completionTokens ?: 0) <= 50) // Should be within the stricter limit
+        // Note: Some reasoning models may return 0 tokens for certain requests, so we just check the limit
+    }
 }

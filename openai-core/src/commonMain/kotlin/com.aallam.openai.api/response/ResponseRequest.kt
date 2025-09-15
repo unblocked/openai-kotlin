@@ -47,6 +47,11 @@ public data class ResponseRequest(
      * Maximum number of tokens to generate.
      */
     @SerialName("max_output_tokens") public val maxOutputTokens: Int? = null,
+
+    /**
+     * Instructions for the model on how to respond.
+     */
+    @SerialName("instructions") public val instructions: String? = null,
     
     /**
      * Nucleus sampling parameter.
@@ -98,6 +103,11 @@ public class ResponseRequestBuilder {
      * Nucleus sampling parameter.
      */
     public var topP: Double? = null
+
+    /**
+     * Instructions for the model on how to respond.
+     */
+    public var instructions: String? = null
     
     /**
      * Build the input items using a DSL.
@@ -118,6 +128,7 @@ public class ResponseRequestBuilder {
         temperature = temperature,
         maxOutputTokens = maxOutputTokens,
         topP = topP,
+        instructions = instructions,
     )
 }
 
