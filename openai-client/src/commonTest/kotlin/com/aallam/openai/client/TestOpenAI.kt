@@ -2,6 +2,7 @@ package com.aallam.openai.client
 
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.api.logging.LogLevel
+import com.aallam.openai.api.logging.Logger
 import com.aallam.openai.client.internal.OpenAIApi
 import com.aallam.openai.client.internal.createHttpClient
 import com.aallam.openai.client.internal.env
@@ -16,7 +17,7 @@ internal val token: String
 
 internal val openAIConfig: OpenAIConfig = OpenAIConfig(
     token = token,
-    logging = LoggingConfig(logLevel = LogLevel.All),
+    logging = LoggingConfig(logLevel = LogLevel.All, logger = Logger.Simple),
     timeout = Timeout(socket = 1.minutes),
 )
 
