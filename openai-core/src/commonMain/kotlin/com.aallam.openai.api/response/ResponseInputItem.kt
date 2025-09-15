@@ -42,6 +42,11 @@ public sealed interface ResponseInputItem {
          * A summary of the reasoning content.
          */
         @SerialName("summary") public val summary: List<SummaryContentPart>,
+
+        /**
+         * The encrypted reasoning content from a previous response.
+         */
+        @SerialName("encrypted_content") public val encryptedContent: String? = null,
     ) : ResponseInputItem
 }
 
@@ -74,3 +79,12 @@ public sealed interface ReasoningContentPart
 @Serializable
 @SerialName("reasoning_text")
 public data class ReasoningTextPart(@SerialName("text") val text: String) : ReasoningContentPart
+
+/**
+ * Reasoning encrypted content part.
+ *
+ * @param encryptedContent the encrypted reasoning content.
+ */
+@Serializable
+@SerialName("reasoning_encrypted")
+public data class ReasoningEncryptedPart(@SerialName("encrypted_content") val encryptedContent: String) : ReasoningContentPart

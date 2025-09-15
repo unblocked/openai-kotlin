@@ -49,9 +49,14 @@ public sealed interface ResponseOutputItem {
         @SerialName("id") public val id: String,
 
         /**
-         * The reasoning trace.
+         * The encrypted reasoning content.
          */
-        @SerialName("reasoning") public val reasoning: ReasoningTrace? = null,
+        @SerialName("encrypted_content") public val encryptedContent: String? = null,
+
+        /**
+         * The reasoning summary.
+         */
+        @SerialName("summary") public val summary: List<SummaryContentPart>? = null,
 
         /**
          * The status of the reasoning.

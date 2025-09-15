@@ -4,19 +4,16 @@ import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.api.response.*
 import com.aallam.openai.api.exception.InvalidRequestException
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertFailsWith
 
 class TestResponses : TestOpenAI() {
 
     @Test
-    fun testResponsesBasic() = runTest {
+    fun testResponsesBasic() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
             input {
@@ -41,17 +38,17 @@ class TestResponses : TestOpenAI() {
         assertTrue(response.output.isNotEmpty())
         val messageOutput = response.output.find { it is ResponseOutputItem.Message } as? ResponseOutputItem.Message
         assertNotNull(messageOutput)
-        assertNotNull(messageOutput!!.id)
+        assertNotNull(messageOutput.id)
         assertEquals(ChatRole.Assistant, messageOutput.role)
         assertTrue(messageOutput.content.isNotEmpty())
 
         // Validate firstMessageText helper
         assertNotNull(response.firstMessageText)
-        assertTrue(response.firstMessageText!!.isNotEmpty())
+        assertTrue(response.firstMessageText?.isNotEmpty() == true)
     }
 
     @Test
-    fun testResponsesWithReasoningBasic() = runTest {
+    fun testResponsesWithReasoningBasic() = test {
         val request = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
             reasoning = ReasoningConfig(effort = "medium")
@@ -74,13 +71,14 @@ class TestResponses : TestOpenAI() {
         // Reasoning may or may not be available depending on model/API
         // But if reasoning config is provided, reasoning field should be present
         if (response.reasoning != null) {
-            println("Reasoning content available: ${response.reasoning?.content != null}")
-            println("Encrypted content available: ${response.reasoning?.encryptedContent != null}")
+            // Verify reasoning structure when present
+            assertNotNull(response.reasoning)
+            assertNotNull(response.reasoning?.encryptedContent)
         }
     }
 
     @Test
-    fun testReasoningConfigEffortLevels() = runTest {
+    fun testReasoningConfigEffortLevels() = test {
         val efforts = listOf("low", "medium", "high")
 
         for (effort in efforts) {
@@ -101,12 +99,11 @@ class TestResponses : TestOpenAI() {
             assertNotNull(response.id)
             assertEquals("completed", response.status)
             assertTrue(response.output.isNotEmpty())
-            println("Effort level '$effort' - Response ID: ${response.id}")
         }
     }
 
     @Test
-    fun testReasoningConfigSummaryOptions() = runTest {
+    fun testReasoningConfigSummaryOptions() = test {
         // Note: gpt-5 only supports "detailed" summary option, not "concise"
         val summaryOptions = listOf("auto", "detailed")
 
@@ -128,12 +125,11 @@ class TestResponses : TestOpenAI() {
             assertNotNull(response.id)
             assertEquals("completed", response.status)
             assertTrue(response.output.isNotEmpty())
-            println("Summary option '$summary' - Response ID: ${response.id}")
         }
     }
 
     @Test
-    fun testResponsesWithPreviousReasoning() = runTest {
+    fun testResponsesWithPreviousReasoning() = test {
         // First request to establish reasoning context
         val firstRequest = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
@@ -155,12 +151,14 @@ class TestResponses : TestOpenAI() {
         assertTrue(firstResponse.output.isNotEmpty())
         assertNotNull(firstResponse.firstMessageText)
 
-        // Extract reasoning content - this is the key fix
-        val reasoningContent = firstResponse.reasoning?.content
-        val encryptedContent = firstResponse.reasoning?.encryptedContent
+        // Extract reasoning content from output - this is the key fix
+        val reasoningOutput = firstResponse.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        val previousEncryptedContent = reasoningOutput?.encryptedContent
+        val reasoningSummary = reasoningOutput?.summary?.filterIsInstance<SummaryTextPart>()?.firstOrNull()
 
-        println("First response reasoning content available: ${reasoningContent != null}")
-        println("First response encrypted content available: ${encryptedContent != null}")
+        // Verify reasoning content is available
+        assertNotNull(reasoningOutput)
+        assertNotNull(previousEncryptedContent)
 
         // Second request with previous reasoning - properly pass the encrypted content
         val secondRequest = responseRequest {
@@ -178,20 +176,15 @@ class TestResponses : TestOpenAI() {
                     content = firstResponse.firstMessageText ?: "15"
                 }
 
-                // Pass previous reasoning - use actual encrypted content if available
+                // Pass previous reasoning - use encryptedContent field directly on reasoning item
                 reasoning {
-                    content = if (reasoningContent != null) {
-                        listOf(ReasoningTextPart(reasoningContent))
+                    content = emptyList() // API enforces this to be empty
+                    summary = if (reasoningSummary is SummaryTextPart) {
+                        listOf(SummaryTextPart(reasoningSummary.text))
                     } else {
-                        emptyList()
+                        listOf(SummaryTextPart("Previous calculation: 10 + 5 = 15"))
                     }
-                    summary = listOf(SummaryTextPart(
-                        if (encryptedContent != null) {
-                            "Previous reasoning: $encryptedContent"
-                        } else {
-                            "Previous reasoning about calculating 10 + 5"
-                        }
-                    ))
+                    encryptedContent = previousEncryptedContent // Pass the encrypted content directly
                 }
 
                 // New question building on previous context
@@ -212,8 +205,6 @@ class TestResponses : TestOpenAI() {
 
         // Verify the conversation flow makes sense
         val secondAnswer = secondResponse.firstMessageText
-        println("First answer: ${firstResponse.firstMessageText}")
-        println("Second answer: $secondAnswer")
 
         // The second response should reference the previous calculation
         assertTrue(secondAnswer?.contains("30") == true || secondAnswer?.contains("2") == true,
@@ -221,7 +212,7 @@ class TestResponses : TestOpenAI() {
     }
 
     @Test
-    fun testResponseRequestBuilder() = runTest {
+    fun testResponseRequestBuilder() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
             temperature = 0.7
@@ -249,7 +240,7 @@ class TestResponses : TestOpenAI() {
     }
 
     @Test
-    fun testResponseRequestWithComplexInput() = runTest {
+    fun testResponseRequestWithComplexInput() = test {
         val request = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
             reasoning = ReasoningConfig(effort = "high", summary = "concise")
@@ -288,7 +279,7 @@ class TestResponses : TestOpenAI() {
     }
 
     @Test
-    fun testResponseWithUsageAndMetadata() = runTest {
+    fun testResponseWithUsageAndMetadata() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
             input {
@@ -311,29 +302,23 @@ class TestResponses : TestOpenAI() {
         // Note: The API returns different field names than expected by the Usage class
         if (response.usage != null) {
             // The totalTokens field should always be present if usage is provided
-            assertNotNull(response.usage!!.totalTokens)
-            assertTrue(response.usage!!.totalTokens!! > 0)
-            println("Usage - Prompt: ${response.usage!!.promptTokens}, Completion: ${response.usage!!.completionTokens}, Total: ${response.usage!!.totalTokens}")
-        } else {
-            println("No usage statistics provided in response")
+            assertNotNull(response.usage?.totalTokens)
+            assertTrue(response.usage?.totalTokens?.let { it > 0 } == true)
         }
 
         // Metadata may or may not be present, and may be empty
         if (response.metadata != null) {
-            println("Metadata: ${response.metadata}")
-        } else {
-            println("No metadata provided in response")
+            assertNotNull(response.metadata)
         }
 
         // Output text may or may not be present
         if (response.outputText != null) {
-            assertTrue(response.outputText!!.isNotEmpty())
-            println("Output text: ${response.outputText}")
+            assertTrue(response.outputText?.isNotEmpty() == true)
         }
     }
 
     @Test
-    fun testResponseWithDifferentIncludeOptions() = runTest {
+    fun testResponseWithDifferentIncludeOptions() = test {
         val includeOptions = listOf(
             listOf("reasoning.encrypted_content"),
             emptyList<String>(),
@@ -360,13 +345,11 @@ class TestResponses : TestOpenAI() {
             assertNotNull(response.id)
             assertEquals("completed", response.status)
             assertTrue(response.output.isNotEmpty())
-
-            println("Include options: $include - Reasoning present: ${response.reasoning != null}")
         }
     }
 
     @Test
-    fun testMultiTurnConversationWithoutReasoning() = runTest {
+    fun testMultiTurnConversationWithoutReasoning() = test {
         // Test a multi-turn conversation without reasoning to ensure basic functionality
         val request = responseRequest {
             model = ModelId("gpt-5")
@@ -386,11 +369,11 @@ class TestResponses : TestOpenAI() {
         assertNotNull(response.firstMessageText)
 
         // Without reasoning config, reasoning should be null or minimal
-        println("Multi-turn without reasoning - Response: ${response.firstMessageText}")
+        // Just verify we got a valid response
     }
 
     @Test
-    fun testResponseErrorHandling() = runTest {
+    fun testResponseErrorHandling() = test {
         // Test with potentially problematic input to see error handling
         val request = responseRequest {
             model = ModelId("gpt-5")

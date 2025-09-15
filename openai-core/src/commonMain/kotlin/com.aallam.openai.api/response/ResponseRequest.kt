@@ -149,8 +149,8 @@ public class ResponseInputBuilder {
     /**
      * Add a reasoning input item.
      */
-    public fun reasoning(content: List<ReasoningContentPart>, summary: List<SummaryContentPart>) {
-        items.add(ResponseInputItem.Reasoning(content = content, summary = summary))
+    public fun reasoning(content: List<ReasoningContentPart>, summary: List<SummaryContentPart>, encryptedContent: String? = null) {
+        items.add(ResponseInputItem.Reasoning(content = content, summary = summary, encryptedContent = encryptedContent))
     }
     
     /**
@@ -160,7 +160,8 @@ public class ResponseInputBuilder {
         val builder = ReasoningInputBuilder().apply(block)
         items.add(ResponseInputItem.Reasoning(
             content = requireNotNull(builder.content) { "content is required" },
-            summary = requireNotNull(builder.summary) { "summary is required" }
+            summary = requireNotNull(builder.summary) { "summary is required" },
+            encryptedContent = builder.encryptedContent
         ))
     }
     
@@ -197,6 +198,11 @@ public class ReasoningInputBuilder {
      * A summary of the reasoning content.
      */
     public var summary: List<SummaryContentPart>? = null
+
+    /**
+     * The encrypted reasoning content from a previous response.
+     */
+    public var encryptedContent: String? = null
 }
 
 /**
