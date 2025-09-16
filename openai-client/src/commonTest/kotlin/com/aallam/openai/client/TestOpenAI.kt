@@ -17,7 +17,7 @@ internal val token: String
 
 internal val openAIConfig: OpenAIConfig = OpenAIConfig(
     token = token,
-    logging = LoggingConfig(logLevel = LogLevel.All, logger = Logger.Simple),
+    logging = LoggingConfig(logLevel = LogLevel.All),
     timeout = Timeout(socket = 1.minutes),
 )
 
