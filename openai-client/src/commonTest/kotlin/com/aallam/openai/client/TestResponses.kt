@@ -1189,4 +1189,346 @@ class TestResponses : TestOpenAI() {
         assertTrue(outputTokens <= 50) // Should be within the stricter limit
         // Note: Some reasoning models may return 0 tokens for certain requests, so we just check the limit
     }
+
+    @Test
+    fun testMultiTurnToolCalling() = test {
+        // First request: Send tools and get tool calls
+        val firstRequest = responseRequest {
+            model = ModelId("gpt-5")
+            tools {
+                tool {
+                    name = ToolName("get_weather")
+                    description = ToolDescription("Get the current weather for a location")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("location") to StringSchema(description = PropertyDescription("The city and state, e.g. San Francisco, CA")),
+                            PropertyName("unit") to StringSchema(description = PropertyDescription("Temperature unit (celsius or fahrenheit)"))
+                        ),
+                        required = listOf(PropertyName("location"))
+                    )
+                }
+                tool {
+                    name = ToolName("calculate_distance")
+                    description = ToolDescription("Calculate distance between two locations")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("from") to StringSchema(description = PropertyDescription("Starting location")),
+                            PropertyName("to") to StringSchema(description = PropertyDescription("Destination location"))
+                        ),
+                        required = listOf(PropertyName("from"), PropertyName("to"))
+                    )
+                }
+            }
+            input {
+                message {
+                    role = ChatRole.User
+                    content {
+                        inputText("What's the weather in San Francisco and how far is it from New York?")
+                    }
+                }
+            }
+        }
+
+        val firstResponse = openAI.createResponse(firstRequest)
+
+        // Verify we got tool calls
+        assertNotNull(firstResponse.id)
+        assertEquals("completed", firstResponse.status)
+        assertTrue(firstResponse.output.isNotEmpty())
+
+        // Extract tool calls from the response
+        val toolCalls = firstResponse.output.filterIsInstance<FunctionCall>()
+        assertTrue(toolCalls.isNotEmpty(), "Should receive tool calls")
+
+        // Verify tool calls structure
+        val weatherCall = toolCalls.find { it.name.name == "get_weather" }
+        val distanceCall = toolCalls.find { it.name.name == "calculate_distance" }
+
+        assertNotNull(weatherCall, "Should have weather tool call")
+        assertNotNull(distanceCall, "Should have distance tool call")
+
+        // Verify tool call details
+        assertNotNull(weatherCall.callId)
+        assertNotNull(weatherCall.arguments)
+        assertEquals(ToolCallStatus.Completed, weatherCall.status)
+
+        assertNotNull(distanceCall.callId)
+        assertNotNull(distanceCall.arguments)
+        assertEquals(ToolCallStatus.Completed, distanceCall.status)
+
+        println("Weather call ID: ${weatherCall.callId}")
+        println("Weather arguments: ${weatherCall.arguments}")
+        println("Distance call ID: ${distanceCall.callId}")
+        println("Distance arguments: ${distanceCall.arguments}")
+
+        // Second request: Send tool call results back
+        val secondRequest = responseRequest {
+            model = ModelId("gpt-5")
+            tools {
+                tool {
+                    name = ToolName("get_weather")
+                    description = ToolDescription("Get the current weather for a location")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("location") to StringSchema(description = PropertyDescription("The city and state, e.g. San Francisco, CA")),
+                            PropertyName("unit") to StringSchema(description = PropertyDescription("Temperature unit (celsius or fahrenheit)"))
+                        ),
+                        required = listOf(PropertyName("location"))
+                    )
+                }
+                tool {
+                    name = ToolName("calculate_distance")
+                    description = ToolDescription("Calculate distance between two locations")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("from") to StringSchema(description = PropertyDescription("Starting location")),
+                            PropertyName("to") to StringSchema(description = PropertyDescription("Destination location"))
+                        ),
+                        required = listOf(PropertyName("from"), PropertyName("to"))
+                    )
+                }
+            }
+            input {
+                // Include the original user message
+                message {
+                    role = ChatRole.User
+                    content {
+                        inputText("What's the weather in San Francisco and how far is it from New York?")
+                    }
+                }
+
+                // Include the assistant's tool calls
+                functionCall {
+                    name = weatherCall.name
+                    callId = weatherCall.callId
+                    arguments = weatherCall.arguments
+                    status = weatherCall.status
+                }
+
+                functionCall {
+                    name = distanceCall.name
+                    callId = distanceCall.callId
+                    arguments = distanceCall.arguments
+                    status = distanceCall.status
+                }
+
+                // Provide tool call outputs
+                functionCallOutput {
+                    callId = weatherCall.callId
+                    output = """{"temperature": 72, "condition": "sunny", "humidity": 65}"""
+                }
+
+                functionCallOutput {
+                    callId = distanceCall.callId
+                    output = """{"distance": 2572, "unit": "miles", "duration": "6 hours 15 minutes"}"""
+                }
+            }
+        }
+
+        val secondResponse = openAI.createResponse(secondRequest)
+
+        // Verify the final response
+        assertNotNull(secondResponse.id)
+        assertEquals("completed", secondResponse.status)
+        assertTrue(secondResponse.output.isNotEmpty())
+
+        // Should get a message response with the synthesized answer
+        val finalMessage = secondResponse.output.filterIsInstance<Message>().firstOrNull()
+        assertNotNull(finalMessage, "Should receive final message")
+        assertEquals(ChatRole.Assistant, finalMessage.role)
+        assertTrue(finalMessage.content.isNotEmpty())
+
+        // Verify the message contains weather and distance information
+        val messageText = finalMessage.content.filterIsInstance<MessageContent.OutputText>()
+            .joinToString(" ") { it.text }
+        assertTrue(messageText.isNotEmpty(), "Final message should not be empty")
+
+        println("Final response: $messageText")
+    }
+
+    @Test
+    fun testToolCallingWithSubsequentRounds() = test {
+        // Test a scenario where the assistant needs multiple rounds of tool calls
+        val firstRequest = responseRequest {
+            model = ModelId("gpt-5")
+            tools {
+                tool {
+                    name = ToolName("search_database")
+                    description = ToolDescription("Search for information in a database")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("query") to StringSchema(description = PropertyDescription("Search query")),
+                            PropertyName("table") to StringSchema(description = PropertyDescription("Database table to search"))
+                        ),
+                        required = listOf(PropertyName("query"), PropertyName("table"))
+                    )
+                }
+                tool {
+                    name = ToolName("format_results")
+                    description = ToolDescription("Format search results for display")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("data") to StringSchema(description = PropertyDescription("Raw data to format")),
+                            PropertyName("format") to StringSchema(description = PropertyDescription("Output format (table, list, or summary)"))
+                        ),
+                        required = listOf(PropertyName("data"))
+                    )
+                }
+            }
+            input {
+                message {
+                    role = ChatRole.User
+                    content {
+                        inputText("Find all users with the name 'John' and format the results as a table")
+                    }
+                }
+            }
+        }
+
+        val firstResponse = openAI.createResponse(firstRequest)
+
+        // Should get a database search tool call first
+        val searchCalls = firstResponse.output.filterIsInstance<FunctionCall>()
+            .filter { it.name.name == "search_database" }
+        assertTrue(searchCalls.isNotEmpty(), "Should receive database search call")
+
+        val searchCall = searchCalls.first()
+
+        // Respond with search results
+        val secondRequest = responseRequest {
+            model = ModelId("gpt-5")
+            tools {
+                tool {
+                    name = ToolName("search_database")
+                    description = ToolDescription("Search for information in a database")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("query") to StringSchema(description = PropertyDescription("Search query")),
+                            PropertyName("table") to StringSchema(description = PropertyDescription("Database table to search"))
+                        ),
+                        required = listOf(PropertyName("query"), PropertyName("table"))
+                    )
+                }
+                tool {
+                    name = ToolName("format_results")
+                    description = ToolDescription("Format search results for display")
+                    parameters = ObjectSchema(
+                        properties = mapOf(
+                            PropertyName("data") to StringSchema(description = PropertyDescription("Raw data to format")),
+                            PropertyName("format") to StringSchema(description = PropertyDescription("Output format (table, list, or summary)"))
+                        ),
+                        required = listOf(PropertyName("data"))
+                    )
+                }
+            }
+            input {
+                message {
+                    role = ChatRole.User
+                    content {
+                        inputText("Find all users with the name 'John' and format the results as a table")
+                    }
+                }
+
+                functionCall {
+                    name = searchCall.name
+                    callId = searchCall.callId
+                    arguments = searchCall.arguments
+                    status = searchCall.status
+                }
+
+                functionCallOutput {
+                    callId = searchCall.callId
+                    output = """[{"id": 1, "name": "John Smith", "email": "john.smith@example.com"}, {"id": 2, "name": "John Doe", "email": "john.doe@example.com"}]"""
+                }
+            }
+        }
+
+        val secondResponse = openAI.createResponse(secondRequest)
+
+        // Now should get a format_results tool call
+        val formatCalls = secondResponse.output.filterIsInstance<FunctionCall>()
+            .filter { it.name.name == "format_results" }
+
+        if (formatCalls.isNotEmpty()) {
+            // If we get another tool call, handle it
+            val formatCall = formatCalls.first()
+
+            val thirdRequest = responseRequest {
+                model = ModelId("gpt-5")
+                tools {
+                    tool {
+                        name = ToolName("search_database")
+                        description = ToolDescription("Search for information in a database")
+                        parameters = ObjectSchema(
+                            properties = mapOf(
+                                PropertyName("query") to StringSchema(description = PropertyDescription("Search query")),
+                                PropertyName("table") to StringSchema(description = PropertyDescription("Database table to search"))
+                            ),
+                            required = listOf(PropertyName("query"), PropertyName("table"))
+                        )
+                    }
+                    tool {
+                        name = ToolName("format_results")
+                        description = ToolDescription("Format search results for display")
+                        parameters = ObjectSchema(
+                            properties = mapOf(
+                                PropertyName("data") to StringSchema(description = PropertyDescription("Raw data to format")),
+                                PropertyName("format") to StringSchema(description = PropertyDescription("Output format (table, list, or summary)"))
+                            ),
+                            required = listOf(PropertyName("data"))
+                        )
+                    }
+                }
+                input {
+                    message {
+                        role = ChatRole.User
+                        content {
+                            inputText("Find all users with the name 'John' and format the results as a table")
+                        }
+                    }
+
+                    functionCall {
+                        name = searchCall.name
+                        callId = searchCall.callId
+                        arguments = searchCall.arguments
+                        status = searchCall.status
+                    }
+
+                    functionCallOutput {
+                        callId = searchCall.callId
+                        output = """[{"id": 1, "name": "John Smith", "email": "john.smith@example.com"}, {"id": 2, "name": "John Doe", "email": "john.doe@example.com"}]"""
+                    }
+
+                    functionCall {
+                        name = formatCall.name
+                        callId = formatCall.callId
+                        arguments = formatCall.arguments
+                        status = formatCall.status
+                    }
+
+                    functionCallOutput {
+                        callId = formatCall.callId
+                        output = """| ID | Name | Email |
+|-----|------|-------|
+| 1 | John Smith | john.smith@example.com |
+| 2 | John Doe | john.doe@example.com |"""
+                    }
+                }
+            }
+
+            val thirdResponse = openAI.createResponse(thirdRequest)
+
+            // Should get final message
+            assertNotNull(thirdResponse.id)
+            assertEquals("completed", thirdResponse.status)
+            assertTrue(thirdResponse.output.isNotEmpty())
+
+            val finalMessage = thirdResponse.output.filterIsInstance<Message>().firstOrNull()
+            assertNotNull(finalMessage, "Should receive final formatted message")
+        } else {
+            // If no additional tool calls, should have final message
+            val finalMessage = secondResponse.output.filterIsInstance<Message>().firstOrNull()
+            assertNotNull(finalMessage, "Should receive final message")
+        }
+    }
 }

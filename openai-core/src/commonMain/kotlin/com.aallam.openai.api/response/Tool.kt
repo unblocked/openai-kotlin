@@ -54,12 +54,6 @@ public data class ArraySchema(
     val description: PropertyDescription,
 ) : Schema
 
-@Serializable @SerialName("string")
-public data class EnumSchema(
-    val description: PropertyDescription,
-    val enum: List<EnumValue>,
-)
-
 @JvmInline
 @Serializable
 public value class ToolName(public val name: String)
@@ -87,7 +81,7 @@ public class ToolBuilder {
     public var parameters: Schema? = null
     public var strict: Boolean? = null
 
-    public fun build(): Tool = FunctionTool(
+    internal fun build(): Tool = FunctionTool(
         name = requireNotNull(name) { "name is required" },
         description = requireNotNull(description) { "description is required" },
         parameters = requireNotNull(parameters) { "parameters is required" },
