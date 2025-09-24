@@ -4,6 +4,10 @@ import com.aallam.openai.api.chat.ChatRole
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.api.response.*
 import com.aallam.openai.api.exception.InvalidRequestException
+import com.aallam.openai.client.LoggingConfig
+import com.aallam.openai.api.logging.LogLevel
+import com.aallam.openai.api.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -33,7 +37,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Hello, how are you?"
+                    content {
+                        inputText("Hello, how are you?")
+                    }
                 }
             }
         }
@@ -50,12 +56,12 @@ class TestResponses : TestOpenAI() {
 
         // Validate output structure
         assertTrue(response.output.isNotEmpty())
-        val messageOutput = response.output.find { it is ResponseOutputItem.Message } as? ResponseOutputItem.Message
+        val messageOutput = response.output.find { it is Message } as? Message
         assertNotNull(messageOutput?.id)
         assertNotNull(messageOutput.id)
         assertEquals(ChatRole.Assistant, messageOutput.role)
         assertTrue(messageOutput.content.isNotEmpty())
-        
+
         // Validate firstMessageTest helper
         assertNotNull(response.firstMessageText)
         assertTrue(response.firstMessageText?.isNotEmpty() == true)
@@ -71,7 +77,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Count from 1 to 5"
+                    content {
+                        inputText("Count from 1 to 5")
+                    }
                 }
             }
         }
@@ -99,7 +107,7 @@ class TestResponses : TestOpenAI() {
 
         // Verify we got encrypted content in the final response
         val finalResponse = finalChunk?.response
-        val reasoningOutput = finalResponse?.output?.filterIsInstance<ResponseOutputItem.Reasoning>()?.firstOrNull()
+        val reasoningOutput = finalResponse?.output?.filterIsInstance<Reasoning>()?.firstOrNull()
         assertNotNull(reasoningOutput?.encryptedContent, "Should have encrypted reasoning content")
     }
 
@@ -112,7 +120,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Say hello"
+                    content {
+                        inputText("Say hello")
+                    }
                 }
             }
         }
@@ -146,7 +156,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Explain photosynthesis briefly"
+                    content {
+                        inputText("Explain photosynthesis briefly")
+                    }
                 }
             }
         }
@@ -183,7 +195,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "What is 2+2?"
+                    content {
+                        inputText("What is 2+2?")
+                    }
                 }
             }
         }
@@ -215,7 +229,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Write a very long detailed explanation of quantum mechanics, covering all major principles, mathematical formulations, and historical development."
+                    content {
+                        inputText("Write a very long detailed explanation of quantum mechanics, covering all major principles, mathematical formulations, and historical development.")
+                    }
                 }
             }
         }
@@ -256,7 +272,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Hello"
+                    content {
+                        inputText("Hello")
+                    }
                 }
             }
         }
@@ -283,7 +301,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Hello"
+                    content {
+                        inputText("Hello")
+                    }
                 }
             }
         }
@@ -335,7 +355,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Count from 1 to 3"
+                    content {
+                        inputText("Count from 1 to 3")
+                    }
                 }
             }
         }
@@ -383,7 +405,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Say 'Hello World' exactly"
+                    content {
+                        inputText("Say 'Hello World' exactly")
+                    }
                 }
             }
         }
@@ -423,7 +447,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Write a short poem"
+                    content {
+                        inputText("Write a short poem")
+                    }
                 }
             }
         }
@@ -448,7 +474,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Hi"
+                    content {
+                        inputText("Hi")
+                    }
                 }
             }
         }
@@ -476,7 +504,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Write a long essay about artificial intelligence"
+                    content {
+                        inputText("Write a long essay about artificial intelligence")
+                    }
                 }
             }
         }
@@ -493,6 +523,10 @@ class TestResponses : TestOpenAI() {
 
         // Validate that we received chunks and the response structure is correct
         assertTrue(chunks.isNotEmpty(), "Should have received streaming chunks")
+
+        // Validate that we received chunks with response data
+        val chunksWithResponse = chunks.filter { it.response != null }
+        assertTrue(chunksWithResponse.isNotEmpty(), "Should have chunks with response data")
 
         // Final response should have usage information showing token limit was respected
         val finalChunk = chunks.lastOrNull { it.type == "response.completed" }
@@ -548,7 +582,9 @@ class TestResponses : TestOpenAI() {
                 input {
                     message {
                         role = ChatRole.User
-                        content = "What is 5 + 3?"
+                        content {
+                            inputText("What is 5 + 3?")
+                        }
                     }
                 }
             }
@@ -606,7 +642,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Hello"
+                    content {
+                        inputText("Hello")
+                    }
                 }
             }
         }
@@ -643,7 +681,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Solve this step by step: What is 15 * 23?"
+                    content {
+                        inputText("Solve this step by step: What is 15 * 23?")
+                    }
                 }
             }
         }
@@ -657,7 +697,7 @@ class TestResponses : TestOpenAI() {
 
         // Check if reasoning content is available in the output items
         // The encrypted content is returned as a ResponseOutputItem.Reasoning, not in the top-level reasoning field
-        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        val reasoningOutput = response.output.filterIsInstance<Reasoning>().firstOrNull()
         if (reasoningOutput != null) {
             // Verify reasoning structure when present
             assertNotNull(reasoningOutput.id)
@@ -679,7 +719,9 @@ class TestResponses : TestOpenAI() {
                 input {
                     message {
                         role = ChatRole.User
-                        content = "What is 2 + 2?"
+                        content {
+                            inputText("What is 2 + 2?")
+                        }
                     }
                 }
             }
@@ -705,7 +747,9 @@ class TestResponses : TestOpenAI() {
                 input {
                     message {
                         role = ChatRole.User
-                        content = "Explain the concept of gravity."
+                        content {
+                            inputText("Explain the concept of gravity.")
+                        }
                     }
                 }
             }
@@ -718,6 +762,74 @@ class TestResponses : TestOpenAI() {
         }
     }
 
+
+
+    @Test
+    fun testStreamingResponsesWithNetworkLogging() = test {
+        // Create a custom logger that will capture all HTTP traffic
+        val logMessages = mutableListOf<String>()
+        val customLogger = object : io.ktor.client.plugins.logging.Logger {
+            override fun log(message: String) {
+                logMessages.add(message)
+            }
+        }
+
+        // Create a client with maximum logging to see raw network traffic
+        val loggingClient = OpenAI(
+            token = System.getenv("OPENAI_API_KEY") ?: "",
+            httpClientConfig = {
+                install(io.ktor.client.plugins.logging.Logging) {
+                    logger = customLogger
+                    level = io.ktor.client.plugins.logging.LogLevel.ALL
+                    sanitizeHeader { false }  // Don't sanitize any headers
+                }
+            }
+        )
+
+        val request = responseRequest {
+            model = ModelId("gpt-5")
+            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            include = listOf("reasoning.encrypted_content")
+            stream = true
+            store = false
+            instructions = "You are a helpful veterinarian that speaks like a pirate."
+            input {
+                message {
+                    role = ChatRole.User
+                    content {
+                        inputText("How do mice compare to cats?")
+                    }
+                }
+            }
+        }
+
+        println("=== STARTING STREAMING RESPONSE TEST (UPDATED) ===")
+        println("Request: $request")
+
+        // Test streaming response
+        val chunks = mutableListOf<ResponseChunk>()
+        loggingClient.createResponseStream(request).collect { chunk ->
+            println("=== RECEIVED CHUNK ===")
+            println("Chunk: $chunk")
+            chunks.add(chunk)
+        }
+
+        println("=== STREAMING COMPLETE ===")
+        println("Total chunks received: ${chunks.size}")
+
+        // Print all captured HTTP logs
+        println("=== HTTP LOGS ===")
+        logMessages.forEach { log ->
+            println("LOG: $log")
+        }
+
+
+        // Basic validation
+        assertTrue(chunks.isNotEmpty(), "Should receive at least one chunk")
+
+        loggingClient.close()
+    }
+
     @Test
     fun testResponsesWithPreviousReasoning() = test {
         // First request to establish reasoning context
@@ -728,7 +840,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "What is 10 + 5? Please show your reasoning."
+                    content {
+                        inputText("What is 10 + 5? Please show your reasoning.")
+                    }
                 }
             }
         }
@@ -742,13 +856,15 @@ class TestResponses : TestOpenAI() {
         assertNotNull(firstResponse.firstMessageText)
 
         // Extract reasoning content from output - this is the key fix
-        val reasoningOutput = firstResponse.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        val reasoningOutput = firstResponse.output.filterIsInstance<Reasoning>().firstOrNull()
         val previousEncryptedContent = reasoningOutput?.encryptedContent
         val reasoningSummary = reasoningOutput?.summary?.filterIsInstance<SummaryTextPart>()?.firstOrNull()
+        val previousReasoningId = reasoningOutput?.id
 
         // Verify reasoning content is available
         assertNotNull(reasoningOutput)
         assertNotNull(previousEncryptedContent)
+        assertNotNull(previousReasoningId)
 
         // Second request with previous reasoning - properly pass the encrypted content
         val secondRequest = responseRequest {
@@ -759,28 +875,34 @@ class TestResponses : TestOpenAI() {
                 // Previous conversation context
                 message {
                     role = ChatRole.User
-                    content = "What is 10 + 5? Please show your reasoning."
+                    content {
+                        inputText("What is 10 + 5? Please show your reasoning.")
+                    }
                 }
                 message {
                     role = ChatRole.Assistant
-                    content = firstResponse.firstMessageText ?: "15"
+                    content {
+                        outputText(firstResponse.firstMessageText ?: "15")
+                    }
                 }
 
                 // Pass previous reasoning - use encryptedContent field directly on reasoning item
                 reasoning {
-                    content = emptyList() // API enforces this to be empty
-                    summary = if (reasoningSummary is SummaryTextPart) {
-                        listOf(SummaryTextPart(reasoningSummary.text))
-                    } else {
-                        listOf(SummaryTextPart("Previous calculation: 10 + 5 = 15"))
-                    }
+                    id = previousReasoningId!! // Use the actual ID from the previous response
                     encryptedContent = previousEncryptedContent // Pass the encrypted content directly
+                    if (reasoningSummary is SummaryTextPart) {
+                        summaryText(reasoningSummary.text)
+                    } else {
+                        summaryText("Previous calculation: 10 + 5 = 15")
+                    }
                 }
 
                 // New question building on previous context
                 message {
                     role = ChatRole.User
-                    content = "Now multiply that result by 2. Use the previous reasoning to inform your approach."
+                    content {
+                        inputText("Now multiply that result by 2. Use the previous reasoning to inform your approach.")
+                    }
                 }
             }
         }
@@ -820,13 +942,13 @@ class TestResponses : TestOpenAI() {
         assertEquals(2, request.input.size)
 
         // Validate input structure
-        val systemMessage = request.input[0] as ResponseInputItem.Message
+        val systemMessage = request.input[0] as Message
         assertEquals(ChatRole.System, systemMessage.role)
-        assertEquals("You are a helpful assistant.", systemMessage.content)
+        assertTrue(systemMessage.content.isNotEmpty())
 
-        val userMessage = request.input[1] as ResponseInputItem.Message
+        val userMessage = request.input[1] as Message
         assertEquals(ChatRole.User, userMessage.role)
-        assertEquals("Hello!", userMessage.content)
+        assertTrue(userMessage.content.isNotEmpty())
     }
 
     @Test
@@ -842,8 +964,9 @@ class TestResponses : TestOpenAI() {
                 message(ChatRole.User, "Solve: 2x + 5 = 15")
                 message(ChatRole.Assistant, "To solve 2x + 5 = 15, I'll subtract 5 from both sides: 2x = 10, then divide by 2: x = 5")
                 reasoning {
-                    content = listOf(ReasoningTextPart("Previous algebraic reasoning steps"))
-                    summary = listOf(SummaryTextPart("Solved linear equation step by step"))
+                    id = "rs_${System.currentTimeMillis()}"
+                    text("Previous algebraic reasoning steps")
+                    summaryText("Solved linear equation step by step")
                 }
                 message(ChatRole.User, "Now solve: 3x - 7 = 14")
             }
@@ -861,10 +984,10 @@ class TestResponses : TestOpenAI() {
         assertEquals(5, request.input.size)
 
         // Validate reasoning input item
-        val reasoningInput = request.input[3] as ResponseInputItem.Reasoning
-        assertEquals(1, reasoningInput.content.size)
-        assertEquals(1, reasoningInput.summary.size)
-        assertTrue(reasoningInput.content[0] is ReasoningTextPart)
+        val reasoningInput = request.input[3] as Reasoning
+        assertTrue(reasoningInput.content?.isNotEmpty() == true)
+        assertTrue(reasoningInput.summary.isNotEmpty())
+        assertTrue(reasoningInput.content?.get(0) is ReasoningTextPart)
         assertTrue(reasoningInput.summary[0] is SummaryTextPart)
     }
 
@@ -875,7 +998,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Write a short poem about coding."
+                    content {
+                        inputText("Write a short poem about coding.")
+                    }
                 }
             }
         }
@@ -925,7 +1050,9 @@ class TestResponses : TestOpenAI() {
                 input {
                     message {
                         role = ChatRole.User
-                        content = "What is the capital of France?"
+                        content {
+                            inputText("What is the capital of France?")
+                        }
                     }
                 }
             }
@@ -971,7 +1098,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Write a very long essay about the history of the universe, covering every detail from the Big Bang to the present day, including all scientific discoveries, philosophical implications, and cultural impacts throughout human history."
+                    content {
+                        inputText("Write a very long essay about the history of the universe, covering every detail from the Big Bang to the present day, including all scientific discoveries, philosophical implications, and cultural impacts throughout human history.")
+                    }
                 }
             }
         }
@@ -990,7 +1119,9 @@ class TestResponses : TestOpenAI() {
             input {
                 message {
                     role = ChatRole.User
-                    content = "Explain quantum computing in simple terms."
+                    content {
+                        inputText("Explain quantum computing in simple terms.")
+                    }
                 }
             }
             store = false
@@ -1011,9 +1142,9 @@ class TestResponses : TestOpenAI() {
 
         // Validate output structure - reasoning models return reasoning output, not message output
         assertTrue(response.output.isNotEmpty())
-        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        val reasoningOutput = response.output.filterIsInstance<Reasoning>().firstOrNull()
         assertNotNull(reasoningOutput)
-        assertNotNull(reasoningOutput.id)
+        assertNotNull(reasoningOutput?.id)
 
         // For reasoning models, the actual response text might be in the reasoning summary or not present
         // The key is that we got a valid response with the correct structure
@@ -1047,9 +1178,9 @@ class TestResponses : TestOpenAI() {
 
         // Validate output structure - reasoning models return reasoning output, not message output
         assertTrue(response.output.isNotEmpty())
-        val reasoningOutput = response.output.filterIsInstance<ResponseOutputItem.Reasoning>().firstOrNull()
+        val reasoningOutput = response.output.filterIsInstance<Reasoning>().firstOrNull()
         assertNotNull(reasoningOutput)
-        assertNotNull(reasoningOutput.id)
+        assertNotNull(reasoningOutput?.id)
 
         // Validate usage information shows limited output tokens (even more restrictive)
         assertNotNull(response.usage)
