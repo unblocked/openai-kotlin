@@ -14,12 +14,12 @@ public value class Verbosity(public val id: String) {
          * Low verbosity - terse, concise responses.
          */
         public val Low: Verbosity = Verbosity("low")
-        
+
         /**
          * Medium verbosity - balanced responses (default).
          */
         public val Medium: Verbosity = Verbosity("medium")
-        
+
         /**
          * High verbosity - detailed, comprehensive responses.
          */
