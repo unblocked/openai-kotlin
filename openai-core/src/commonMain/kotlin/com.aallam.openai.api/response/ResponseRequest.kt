@@ -69,7 +69,7 @@ public data class ResponseRequest(
 
     @SerialName("metadata") public val metadata: Map<String, String>? = null,
     @SerialName("parallel_tool_calls") public val parallelToolCalls: Boolean? = null,
-    @SerialName("previous_response_id") public val previousResponseId: String? = null,
+    @SerialName("previous_response_id") public val previousResponseId: ResponseId? = null,
     @SerialName("text") public val text: JsonObject? = null,
     @SerialName("tool_choice") public val toolChoice: JsonElement? = null,
     @SerialName("truncation") public val truncation: String? = null,
@@ -135,7 +135,7 @@ public class ResponseRequestBuilder {
 
     public var metadata: Map<String, String>? = null
     public var parallelToolCalls: Boolean? = null
-    public var previousResponseId: String? = null
+    public var previousResponseId: ResponseId? = null
     public var text: JsonObject? = null
     public var toolChoice: JsonElement? = null
     public var truncation: String? = null

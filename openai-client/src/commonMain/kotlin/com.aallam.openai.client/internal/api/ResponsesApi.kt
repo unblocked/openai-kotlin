@@ -4,6 +4,7 @@ import com.aallam.openai.api.core.DeleteResponse
 import com.aallam.openai.api.core.RequestOptions
 import com.aallam.openai.api.response.Response
 import com.aallam.openai.api.response.ResponseChunk
+import com.aallam.openai.api.response.ResponseId
 import com.aallam.openai.api.response.ResponseRequest
 import com.aallam.openai.client.Responses
 import com.aallam.openai.client.internal.extension.requestOptions
@@ -58,20 +59,20 @@ internal class ResponsesApi(private val requester: HttpRequester) : Responses {
         }
     }
 
-    override suspend fun response(id: String, requestOptions: RequestOptions?): Response? {
+    override suspend fun response(id: ResponseId, requestOptions: RequestOptions?): Response? {
         val response = requester.perform<HttpResponse> {
             it.get {
-                url(path = "${ApiPath.Responses}/${id}")
+                url(path = "${ApiPath.Responses}/${id.id}")
                 requestOptions(requestOptions)
             }
         }
         return if (response.status == HttpStatusCode.NotFound) null else response.body()
     }
 
-    override suspend fun delete(id: String, requestOptions: RequestOptions?): Boolean {
+    override suspend fun delete(id: ResponseId, requestOptions: RequestOptions?): Boolean {
         val response = requester.perform<HttpResponse> {
             it.delete {
-                url(path = "${ApiPath.Responses}/${id}")
+                url(path = "${ApiPath.Responses}/${id.id}")
                 requestOptions(requestOptions)
             }
         }
@@ -81,10 +82,10 @@ internal class ResponsesApi(private val requester: HttpRequester) : Responses {
         }
     }
 
-    override suspend fun cancel(id: String, requestOptions: RequestOptions?): Response? {
+    override suspend fun cancel(id: ResponseId, requestOptions: RequestOptions?): Response? {
         val response = requester.perform<HttpResponse> {
             it.post {
-                url(path = "${ApiPath.Responses}/${id}/cancel")
+                url(path = "${ApiPath.Responses}/${id.id}/cancel")
                 requestOptions(requestOptions)
             }
         }

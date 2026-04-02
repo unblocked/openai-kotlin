@@ -3,6 +3,7 @@ package com.aallam.openai.client
 import com.aallam.openai.api.core.RequestOptions
 import com.aallam.openai.api.response.Response
 import com.aallam.openai.api.response.ResponseChunk
+import com.aallam.openai.api.response.ResponseId
 import com.aallam.openai.api.response.ResponseRequest
 import kotlinx.coroutines.flow.Flow
 
@@ -50,7 +51,7 @@ public interface Responses {
      * @return the response, or null if not found
      */
     public suspend fun response(
-        id: String,
+        id: ResponseId,
         requestOptions: RequestOptions? = null
     ): Response?
 
@@ -62,7 +63,7 @@ public interface Responses {
      * @return true if deleted, false if not found
      */
     public suspend fun delete(
-        id: String,
+        id: ResponseId,
         requestOptions: RequestOptions? = null
     ): Boolean
 
@@ -74,7 +75,7 @@ public interface Responses {
      * @return the cancelled response, or null if not found
      */
     public suspend fun cancel(
-        id: String,
+        id: ResponseId,
         requestOptions: RequestOptions? = null
     ): Response?
 }

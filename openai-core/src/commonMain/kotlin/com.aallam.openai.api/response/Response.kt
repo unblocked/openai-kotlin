@@ -15,7 +15,7 @@ public data class Response(
     /**
      * Unique identifier for the response.
      */
-    @SerialName("id") public val id: String,
+    @SerialName("id") public val id: ResponseId,
     
     /**
      * The object type, always "response".
@@ -71,7 +71,7 @@ public data class Response(
     @SerialName("instructions") public val instructions: String? = null,
     @SerialName("max_output_tokens") public val maxOutputTokens: Int? = null,
     @SerialName("parallel_tool_calls") public val parallelToolCalls: Boolean? = null,
-    @SerialName("previous_response_id") public val previousResponseId: String? = null,
+    @SerialName("previous_response_id") public val previousResponseId: ResponseId? = null,
     @SerialName("store") public val store: Boolean? = null,
     @SerialName("temperature") public val temperature: Double? = null,
     @SerialName("text") public val text: JsonObject? = null,
