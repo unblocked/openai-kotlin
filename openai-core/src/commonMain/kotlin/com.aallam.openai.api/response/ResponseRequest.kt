@@ -6,6 +6,8 @@ import com.aallam.openai.api.model.ModelId
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Request for creating a response using the responses API.
@@ -30,7 +32,7 @@ public data class ResponseRequest(
     /**
      * Configuration for reasoning behavior.
      */
-    @SerialName("reasoning") public val reasoning: ReasoningConfig? = null,
+    @SerialName("reasoning") public val reasoning: ResponseReasoning? = null,
     
     /**
      * Additional fields to include in the response.
@@ -64,6 +66,14 @@ public data class ResponseRequest(
     @SerialName("stream") public val stream: Boolean? = null,
 
     @SerialName("tools") public val tools: List<Tool>? = null,
+
+    @SerialName("metadata") public val metadata: Map<String, String>? = null,
+    @SerialName("parallel_tool_calls") public val parallelToolCalls: Boolean? = null,
+    @SerialName("previous_response_id") public val previousResponseId: String? = null,
+    @SerialName("text") public val text: JsonObject? = null,
+    @SerialName("tool_choice") public val toolChoice: JsonElement? = null,
+    @SerialName("truncation") public val truncation: String? = null,
+    @SerialName("user") public val user: String? = null,
 )
 
 /**
@@ -91,7 +101,7 @@ public class ResponseRequestBuilder {
     /**
      * Configuration for reasoning behavior.
      */
-    public var reasoning: ReasoningConfig? = null
+    public var reasoning: ResponseReasoning? = null
     
     /**
      * Additional fields to include in the response.
@@ -122,7 +132,15 @@ public class ResponseRequestBuilder {
      * Whterh to stream the response.
      */
      public var stream: Boolean? = null
-    
+
+    public var metadata: Map<String, String>? = null
+    public var parallelToolCalls: Boolean? = null
+    public var previousResponseId: String? = null
+    public var text: JsonObject? = null
+    public var toolChoice: JsonElement? = null
+    public var truncation: String? = null
+    public var user: String? = null
+
     /**
      * Build the input items using a DSL.
      */
@@ -149,6 +167,13 @@ public class ResponseRequestBuilder {
         instructions = instructions,
         stream = stream,
         tools = tools,
+        metadata = metadata,
+        parallelToolCalls = parallelToolCalls,
+        previousResponseId = previousResponseId,
+        text = text,
+        toolChoice = toolChoice,
+        truncation = truncation,
+        user = user,
     )
 }
 

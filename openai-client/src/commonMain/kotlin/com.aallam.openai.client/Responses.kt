@@ -41,4 +41,40 @@ public interface Responses {
         request: ResponseRequest,
         requestOptions: RequestOptions? = null
     ): Flow<ResponseChunk>
+
+    /**
+     * Retrieves a response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return the response, or null if not found
+     */
+    public suspend fun response(
+        id: String,
+        requestOptions: RequestOptions? = null
+    ): Response?
+
+    /**
+     * Deletes a response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return true if deleted, false if not found
+     */
+    public suspend fun delete(
+        id: String,
+        requestOptions: RequestOptions? = null
+    ): Boolean
+
+    /**
+     * Cancels an in-progress response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return the cancelled response, or null if not found
+     */
+    public suspend fun cancel(
+        id: String,
+        requestOptions: RequestOptions? = null
+    ): Response?
 }
