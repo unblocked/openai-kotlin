@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/Aallam/openai-kotlin?color=yellow)](LICENSE.md)
 [![Documentation](https://img.shields.io/badge/docs-api-a97bff.svg?logo=kotlin)](https://mouaad.aallam.com/openai-kotlin/)
 
-Kotlin client for [OpenAI's API](https://beta.openai.com/docs/api-reference) with multiplatform and coroutines
+Kotlin client for [OpenAI's API](https://platform.openai.com/docs/api-reference) with multiplatform and coroutines
 capabilities.
 
 ## 📦 Setup
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation "com.aallam.openai:openai-client:4.0.1"
+    implementation "com.aallam.openai:openai-client:4.1.0"
 }
 ```
 
@@ -30,7 +30,7 @@ Alternatively, you can use [openai-client-bom](/openai-client-bom)  by adding th
 ```groovy
 dependencies {
     // import Kotlin API client BOM
-    implementation platform('com.aallam.openai:openai-client-bom:4.0.1')
+    implementation platform('com.aallam.openai:openai-client-bom:4.1.0')
 
     // define dependencies without versions
     implementation 'com.aallam.openai:openai-client'
@@ -57,13 +57,13 @@ of [Ktor's engines](https://ktor.io/docs/http-client-engines.html).
     <dependency>
         <groupId>com.aallam.openai</groupId>
         <artifactId>openai-client-jvm</artifactId>
-        <version>3.8.0</version>
+        <version>4.1.0</version>
     </dependency>
             
     <dependency>
         <groupId>io.ktor</groupId>
         <artifactId>ktor-client-okhttp-jvm</artifactId>
-        <version>2.3.2</version>
+        <version>3.0.0</version>
         <scope>runtime</scope>
     </dependency>
 </dependencies>
@@ -105,6 +105,7 @@ Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStar
 
 ### Supported features
 
+- [Responses](guides/GettingStarted.md#responses)
 - [Models](guides/GettingStarted.md#models)
 - [Chat](guides/GettingStarted.md#chat)
 - [Images](guides/GettingStarted.md#images)
@@ -113,6 +114,7 @@ Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStar
 - [Fine-tuning](guides/GettingStarted.md#fine-tuning)
 - [Moderations](guides/GettingStarted.md#moderations)
 - [Audio](guides/GettingStarted.md#audio)
+- [Batch](guides/GettingStarted.md#batch)
 
 #### Beta
 
@@ -120,6 +122,7 @@ Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStar
 - [Threads](guides/GettingStarted.md#threads)
 - [Messages](guides/GettingStarted.md#messages)
 - [Runs](guides/GettingStarted.md#runs)
+- [Vector Stores](guides/GettingStarted.md#vector-stores)
 
 #### Deprecated
 - [Completions](guides/GettingStarted.md#completions)
@@ -133,7 +136,7 @@ Use your `OpenAI` instance to make API requests. [Learn more](guides/GettingStar
 Get started and understand more about how to use OpenAI API client for Kotlin with these guides:
 
 - [Getting Started](guides/GettingStarted.md)
-- [Chat & Function Call](guides/ChatToolCalls.md)
+- [Chat & Tool Calls](guides/ChatToolCalls.md)
 - [FileSource Guide](guides/FileSource.md)
 - [Assistants](guides/Assistants.md)
 
@@ -147,7 +150,7 @@ The specific rules are [already bundled](openai-core/src/jvmMain/resources/META-
 
 ## 📸 Snapshots
 
-[![Snapshot](https://img.shields.io/badge/dynamic/xml?url=https://oss.sonatype.org/service/local/repositories/snapshots/content/com/aallam/openai/openai-client/maven-metadata.xml&label=snapshot&color=red&query=.//versioning/latest)](https://oss.sonatype.org/content/repositories/snapshots/com/aallam/openai/openai-client/)
+[![Snapshot](https://img.shields.io/badge/dynamic/xml?url=https://central.sonatype.com/repository/maven-snapshots/com/aallam/openai/openai-client/maven-metadata.xml&label=snapshot&color=red&query=.//versioning/latest)](https://central.sonatype.com/repository/maven-snapshots/com/aallam/openai/openai-client/)
 
 <details>
  <summary>Learn how to import snapshot version</summary>
@@ -157,7 +160,7 @@ To import snapshot versions into your project, add the following code snippet to
 ```groovy
 repositories {
    //...
-   maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+   maven { url 'https://central.sonatype.com/repository/maven-snapshots/' }
 }
 ```
 
@@ -166,6 +169,23 @@ repositories {
 ## 🛠️ Troubleshooting
 
 For common issues and their solutions, check the [Troubleshooting Guide](TROUBLESHOOTING.md).
+
+## 🧪 Testing
+
+`openai-client` tests are live integration tests and can generate billable API traffic.
+
+- Default (non-billable): live tests are disabled.
+- Opt-in live tests: set `OPENAI_LIVE_TESTS=1` and `OPENAI_API_KEY`.
+
+Examples:
+
+```bash
+# Free/offline checks
+./gradlew :openai-core:jvmTest :openai-core:jsTest :openai-core:wasmJsTest :openai-core:apiCheck :openai-client:apiCheck
+
+# Live smoke (billable)
+OPENAI_LIVE_TESTS=1 OPENAI_API_KEY=... ./gradlew :openai-client:jvmTest --tests "*.TestModels"
+```
 
 ## ⭐️ Support
 
