@@ -1,8 +1,6 @@
 build-maven-local:
-	@echo "Building and publishing JARs to local Maven repository (.maven)..."
-	./gradlew :openai-core:publishJvmPublicationToMavenRepository :openai-core:publishKotlinMultiplatformPublicationToMavenRepository -PsignAllPublications=false -x dokkaHtml
-	./gradlew :openai-client:publishJvmPublicationToMavenRepository :openai-client:publishKotlinMultiplatformPublicationToMavenRepository -PsignAllPublications=false -x dokkaHtml
-	./gradlew :openai-client-bom:publishMavenPublicationToMavenRepository -PsignAllPublications=false -x dokkaHtml
+	@echo "Building and publishing JVM JARs to local Maven repository (.maven)..."
+	./gradlew :openai-core:publishJvmPublicationToMavenRepository :openai-client:publishJvmPublicationToMavenRepository -PsignAllPublications=false -x dokkaHtml
 	@echo "Local JARs published to .maven directory"
 
 generate-maven-dependencies:
