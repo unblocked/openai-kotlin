@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flow
  */
 internal class ResponsesApi(private val requester: HttpRequester) : Responses {
 
-    override suspend fun createResponse(
+    override suspend fun response(
         request: ResponseRequest,
         requestOptions: RequestOptions?
     ): Response {
@@ -35,7 +35,7 @@ internal class ResponsesApi(private val requester: HttpRequester) : Responses {
         }
     }
 
-    override fun createResponseStream(
+    override fun responseStream(
         request: ResponseRequest,
         requestOptions: RequestOptions?
     ): Flow<ResponseChunk> {

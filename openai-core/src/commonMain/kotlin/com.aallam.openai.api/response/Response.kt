@@ -58,7 +58,7 @@ public data class Response(
     /**
      * Error information if the response failed.
      */
-    @SerialName("error") public val error: ResponseError? = null,
+    @SerialName("error") public val error: ResponseErrorDetails? = null,
     
     /**
      * Metadata associated with the response.
@@ -93,7 +93,7 @@ public sealed interface ResponseOutputItem
  * Error information for a failed response.
  */
 @Serializable
-public data class ResponseError(
+public data class ResponseErrorDetails(
     /**
      * The error code.
      */

@@ -22,13 +22,13 @@ public interface Responses {
      * @param requestOptions additional request options
      * @return the generated response with optional reasoning traces
      */
-    public suspend fun createResponse(
+    public suspend fun response(
         request: ResponseRequest,
         requestOptions: RequestOptions? = null
     ): Response
 
     /**
-     * Stream variant of [createResponse].
+     * Stream variant of [response].
      *
      * This method streams response chunks as they are generated, allowing real-time access to
      * reasoning summaries and message content as they are produced.
@@ -37,7 +37,7 @@ public interface Responses {
      * @param requestOptions additional request options
      * @return a flow of response chunks
      */
-    public fun createResponseStream(
+    public fun responseStream(
         request: ResponseRequest,
         requestOptions: RequestOptions? = null
     ): Flow<ResponseChunk>

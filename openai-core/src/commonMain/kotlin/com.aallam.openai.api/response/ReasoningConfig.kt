@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Configuration for reasoning behavior in responses.
  */
 @Serializable
-public data class ReasoningConfig(
+public data class ResponseReasoning(
     /**
      * Controls the effort level for reasoning.
      * Supported values: "low", "medium", "high"
