@@ -30,7 +30,7 @@ public data class ReasoningTrace(
      * The raw reasoning content from the model.
      */
     @SerialName("content") public val content: String? = null,
-    
+
     /**
      * Encrypted reasoning content for stateless mode (future use).
      */

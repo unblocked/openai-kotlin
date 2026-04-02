@@ -71,4 +71,3 @@ public class FunctionCallOutputBuilder {
         output = ToolCallOutput(requireNotNull(output) { "output is required" }),
     )
 }
-

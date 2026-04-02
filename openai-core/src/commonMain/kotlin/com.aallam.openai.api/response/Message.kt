@@ -256,4 +256,3 @@ public class FilePathBuilder {
         index = requireNotNull(index) { "index is required" },
     )
 }
-
