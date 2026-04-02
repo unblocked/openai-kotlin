@@ -44,7 +44,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val response = openAI.createResponse(request)
+        val response = openAI.response(request)
 
         // Validate basic response structure
         assertNotNull(response.id)
@@ -71,7 +71,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreaming() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             include = listOf("reasoning.encrypted_content")
             stream = true // Enable streaming
             input {
@@ -86,7 +86,7 @@ class TestResponses : TestOpenAI() {
 
         // Test streaming response
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -115,7 +115,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingSequenceNumbers() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "low")
+            reasoning = ResponseReasoning(effort = "low")
             stream = true
             input {
                 message {
@@ -128,7 +128,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -150,7 +150,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingEventTypes() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             include = listOf("reasoning.encrypted_content")
             stream = true
             input {
@@ -164,7 +164,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -203,7 +203,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -224,7 +224,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingCancellation() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "high") // Use high effort for longer processing
+            reasoning = ResponseReasoning(effort = "high") // Use high effort for longer processing
             stream = true
             input {
                 message {
@@ -241,7 +241,7 @@ class TestResponses : TestOpenAI() {
 
         val job = launch {
             try {
-                openAI.createResponseStream(request).collect { chunk ->
+                openAI.responseStream(request).collect { chunk ->
                     chunksReceived++
                     if (chunksReceived >= 3) { // Cancel after receiving a few chunks
                         cancel("Test cancellation")
@@ -283,7 +283,7 @@ class TestResponses : TestOpenAI() {
         var timeoutCaught = false
         try {
             withTimeout(1) { // 1ms timeout - should definitely timeout
-                openAI.createResponseStream(request).collect { }
+                openAI.responseStream(request).collect { }
             }
         } catch (e: TimeoutCancellationException) {
             timeoutCaught = true
@@ -310,7 +310,7 @@ class TestResponses : TestOpenAI() {
 
         var errorCaught = false
         try {
-            openAI.createResponseStream(request).collect { }
+            openAI.responseStream(request).collect { }
         } catch (e: InvalidRequestException) {
             errorCaught = true
         } catch (e: Exception) {
@@ -334,7 +334,7 @@ class TestResponses : TestOpenAI() {
 
         var errorCaught = false
         try {
-            openAI.createResponseStream(request).collect { }
+            openAI.responseStream(request).collect { }
         } catch (e: InvalidRequestException) {
             errorCaught = true
         } catch (e: Exception) {
@@ -349,7 +349,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingChunkDataIntegrity() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "medium")
+            reasoning = ResponseReasoning(effort = "medium")
             include = listOf("reasoning.encrypted_content")
             stream = true
             input {
@@ -363,7 +363,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -400,7 +400,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingDeltaAccumulation() = test {
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             stream = true
             input {
                 message {
@@ -413,7 +413,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -455,7 +455,7 @@ class TestResponses : TestOpenAI() {
         }
 
         // Test collecting only first few chunks
-        val limitedChunks = openAI.createResponseStream(request).take(5).toList()
+        val limitedChunks = openAI.responseStream(request).take(5).toList()
 
         assertTrue(limitedChunks.size <= 5, "Should collect at most 5 chunks")
         assertTrue(limitedChunks.isNotEmpty(), "Should collect at least one chunk")
@@ -482,7 +482,7 @@ class TestResponses : TestOpenAI() {
         }
 
         // Test getting only the first chunk
-        val firstChunk = openAI.createResponseStream(request).first()
+        val firstChunk = openAI.responseStream(request).first()
 
         assertNotNull(firstChunk, "Should receive first chunk")
         assertTrue(firstChunk.type.isNotEmpty(), "First chunk should have valid type")
@@ -512,7 +512,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -577,7 +577,7 @@ class TestResponses : TestOpenAI() {
         for (effort in effortLevels) {
             val request = responseRequest {
                 model = ModelId("gpt-5")
-                reasoning = ReasoningConfig(effort = effort)
+                reasoning = ResponseReasoning(effort = effort)
                 stream = true
                 input {
                     message {
@@ -590,7 +590,7 @@ class TestResponses : TestOpenAI() {
             }
 
             val chunks = mutableListOf<ResponseChunk>()
-            openAI.createResponseStream(request).collect { chunk ->
+            openAI.responseStream(request).collect { chunk ->
                 chunks.add(chunk)
             }
 
@@ -617,7 +617,7 @@ class TestResponses : TestOpenAI() {
         }
 
         val chunks = mutableListOf<ResponseChunk>()
-        openAI.createResponseStream(request).collect { chunk ->
+        openAI.responseStream(request).collect { chunk ->
             chunks.add(chunk)
         }
 
@@ -653,7 +653,7 @@ class TestResponses : TestOpenAI() {
         var errorOccurred = false
 
         try {
-            openAI.createResponseStream(request)
+            openAI.responseStream(request)
                 .catch { error ->
                     errorOccurred = true
                     // In a real scenario, you might want to emit a default value or retry
@@ -676,7 +676,7 @@ class TestResponses : TestOpenAI() {
     fun testResponsesStreamingWithReasoningBasic() = test {
         val request = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
-            reasoning = ReasoningConfig(effort = "medium")
+            reasoning = ResponseReasoning(effort = "medium")
             include = listOf("reasoning.encrypted_content")
             input {
                 message {
@@ -688,7 +688,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val response = openAI.createResponse(request)
+        val response = openAI.response(request)
 
         // Validate basic response with reasoning
         assertNotNull(response.id)
@@ -708,13 +708,13 @@ class TestResponses : TestOpenAI() {
     }
 
     @Test
-    fun testReasoningConfigEffortLevels() = test {
+    fun testResponseReasoningEffortLevels() = test {
         val efforts = listOf("low", "medium", "high")
 
         for (effort in efforts) {
             val request = responseRequest {
                 model = ModelId("gpt-5") // Use reasoning model
-                reasoning = ReasoningConfig(effort = effort)
+                reasoning = ResponseReasoning(effort = effort)
                 include = listOf("reasoning.encrypted_content")
                 input {
                     message {
@@ -726,7 +726,7 @@ class TestResponses : TestOpenAI() {
                 }
             }
 
-            val response = openAI.createResponse(request)
+            val response = openAI.response(request)
 
             assertNotNull(response.id)
             assertEquals("completed", response.status)
@@ -735,14 +735,14 @@ class TestResponses : TestOpenAI() {
     }
 
     @Test
-    fun testReasoningConfigSummaryOptions() = test {
+    fun testResponseReasoningSummaryOptions() = test {
         // Note: gpt-5 only supports "detailed" summary option, not "concise"
         val summaryOptions = listOf("auto", "detailed")
 
         for (summary in summaryOptions) {
             val request = responseRequest {
                 model = ModelId("gpt-5") // Use reasoning model
-                reasoning = ReasoningConfig(effort = "medium", summary = summary)
+                reasoning = ResponseReasoning(effort = "medium", summary = summary)
                 include = listOf("reasoning.encrypted_content")
                 input {
                     message {
@@ -754,7 +754,7 @@ class TestResponses : TestOpenAI() {
                 }
             }
 
-            val response = openAI.createResponse(request)
+            val response = openAI.response(request)
 
             assertNotNull(response.id)
             assertEquals("completed", response.status)
@@ -776,7 +776,7 @@ class TestResponses : TestOpenAI() {
 
         // Create a client with maximum logging to see raw network traffic
         val loggingClient = OpenAI(
-            token = System.getenv("OPENAI_API_KEY") ?: "",
+            token = "",
             httpClientConfig = {
                 install(io.ktor.client.plugins.logging.Logging) {
                     logger = customLogger
@@ -788,7 +788,7 @@ class TestResponses : TestOpenAI() {
 
         val request = responseRequest {
             model = ModelId("gpt-5")
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             include = listOf("reasoning.encrypted_content")
             stream = true
             store = false
@@ -808,7 +808,7 @@ class TestResponses : TestOpenAI() {
 
         // Test streaming response
         val chunks = mutableListOf<ResponseChunk>()
-        loggingClient.createResponseStream(request).collect { chunk ->
+        loggingClient.responseStream(request).collect { chunk ->
             println("=== RECEIVED CHUNK ===")
             println("Chunk: $chunk")
             chunks.add(chunk)
@@ -835,7 +835,7 @@ class TestResponses : TestOpenAI() {
         // First request to establish reasoning context
         val firstRequest = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             include = listOf("reasoning.encrypted_content")
             input {
                 message {
@@ -847,7 +847,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val firstResponse = openAI.createResponse(firstRequest)
+        val firstResponse = openAI.response(firstRequest)
 
         // Validate first response
         assertNotNull(firstResponse.id)
@@ -869,7 +869,7 @@ class TestResponses : TestOpenAI() {
         // Second request with previous reasoning - properly pass the encrypted content
         val secondRequest = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
-            reasoning = ReasoningConfig(effort = "medium", summary = "detailed")
+            reasoning = ResponseReasoning(effort = "medium", summary = "detailed")
             include = listOf("reasoning.encrypted_content")
             input {
                 // Previous conversation context
@@ -907,7 +907,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val secondResponse = openAI.createResponse(secondRequest)
+        val secondResponse = openAI.response(secondRequest)
 
         // Validate second response
         assertNotNull(secondResponse.id)
@@ -955,7 +955,7 @@ class TestResponses : TestOpenAI() {
     fun testResponseRequestWithComplexInput() = test {
         val request = responseRequest {
             model = ModelId("gpt-5") // Use reasoning model
-            reasoning = ReasoningConfig(effort = "high", summary = "concise")
+            reasoning = ResponseReasoning(effort = "high", summary = "concise")
             include = listOf("reasoning.encrypted_content")
             temperature = 0.5
             maxOutputTokens = 500
@@ -964,7 +964,7 @@ class TestResponses : TestOpenAI() {
                 message(ChatRole.User, "Solve: 2x + 5 = 15")
                 message(ChatRole.Assistant, "To solve 2x + 5 = 15, I'll subtract 5 from both sides: 2x = 10, then divide by 2: x = 5")
                 reasoning {
-                    id = "rs_${System.currentTimeMillis()}"
+                    id = "rs_test_123"
                     text("Previous algebraic reasoning steps")
                     summaryText("Solved linear equation step by step")
                 }
@@ -1005,7 +1005,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val response = openAI.createResponse(request)
+        val response = openAI.response(request)
 
         // Validate response structure including optional fields
         assertNotNull(response.id)
@@ -1043,7 +1043,7 @@ class TestResponses : TestOpenAI() {
         for (include in includeOptions) {
             val request = responseRequest {
                 model = ModelId("gpt-5") // Use reasoning model
-                reasoning = ReasoningConfig(effort = "medium")
+                reasoning = ResponseReasoning(effort = "medium")
                 if (include != null) {
                     this.include = include
                 }
@@ -1057,7 +1057,7 @@ class TestResponses : TestOpenAI() {
                 }
             }
 
-            val response = openAI.createResponse(request)
+            val response = openAI.response(request)
 
             assertNotNull(response.id)
             assertEquals("completed", response.status)
@@ -1078,7 +1078,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val response = openAI.createResponse(request)
+        val response = openAI.response(request)
 
         assertNotNull(response.id)
         assertEquals("completed", response.status)
@@ -1107,7 +1107,7 @@ class TestResponses : TestOpenAI() {
 
         // This should throw an InvalidRequestException due to max_output_tokens being below minimum (16)
         assertFailsWith<InvalidRequestException> {
-            openAI.createResponse(request)
+            openAI.response(request)
         }
     }
 
@@ -1127,7 +1127,7 @@ class TestResponses : TestOpenAI() {
             store = false
         }
 
-        val response = openAI.createResponse(request)
+        val response = openAI.response(request)
 
         // Validate basic response structure
         assertNotNull(response)
@@ -1159,7 +1159,7 @@ class TestResponses : TestOpenAI() {
 
     @Test
     fun testResponsesWithMaxOutputTokensAndInstructions() = test {
-        val response = openAI.createResponse(
+        val response = openAI.response(
             responseRequest {
                 model = ModelId("gpt-5")
                 maxOutputTokens = 50
@@ -1229,7 +1229,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val firstResponse = openAI.createResponse(firstRequest)
+        val firstResponse = openAI.response(firstRequest)
 
         // Verify we got tool calls
         assertNotNull(firstResponse.id)
@@ -1325,7 +1325,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val secondResponse = openAI.createResponse(secondRequest)
+        val secondResponse = openAI.response(secondRequest)
 
         // Verify the final response
         assertNotNull(secondResponse.id)
@@ -1385,7 +1385,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val firstResponse = openAI.createResponse(firstRequest)
+        val firstResponse = openAI.response(firstRequest)
 
         // Should get a database search tool call first
         val searchCalls = firstResponse.output.filterIsInstance<FunctionCall>()
@@ -1443,7 +1443,7 @@ class TestResponses : TestOpenAI() {
             }
         }
 
-        val secondResponse = openAI.createResponse(secondRequest)
+        val secondResponse = openAI.response(secondRequest)
 
         // Now should get a format_results tool call
         val formatCalls = secondResponse.output.filterIsInstance<FunctionCall>()
@@ -1516,7 +1516,7 @@ class TestResponses : TestOpenAI() {
                 }
             }
 
-            val thirdResponse = openAI.createResponse(thirdRequest)
+            val thirdResponse = openAI.response(thirdRequest)
 
             // Should get final message
             assertNotNull(thirdResponse.id)

@@ -3,6 +3,7 @@ package com.aallam.openai.client
 import com.aallam.openai.api.core.RequestOptions
 import com.aallam.openai.api.response.Response
 import com.aallam.openai.api.response.ResponseChunk
+import com.aallam.openai.api.response.ResponseId
 import com.aallam.openai.api.response.ResponseRequest
 import kotlinx.coroutines.flow.Flow
 
@@ -22,13 +23,13 @@ public interface Responses {
      * @param requestOptions additional request options
      * @return the generated response with optional reasoning traces
      */
-    public suspend fun createResponse(
+    public suspend fun response(
         request: ResponseRequest,
         requestOptions: RequestOptions? = null
     ): Response
 
     /**
-     * Stream variant of [createResponse].
+     * Stream variant of [response].
      *
      * This method streams response chunks as they are generated, allowing real-time access to
      * reasoning summaries and message content as they are produced.
@@ -37,8 +38,44 @@ public interface Responses {
      * @param requestOptions additional request options
      * @return a flow of response chunks
      */
-    public fun createResponseStream(
+    public fun responseStream(
         request: ResponseRequest,
         requestOptions: RequestOptions? = null
     ): Flow<ResponseChunk>
+
+    /**
+     * Retrieves a response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return the response, or null if not found
+     */
+    public suspend fun response(
+        id: ResponseId,
+        requestOptions: RequestOptions? = null
+    ): Response?
+
+    /**
+     * Deletes a response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return true if deleted, false if not found
+     */
+    public suspend fun delete(
+        id: ResponseId,
+        requestOptions: RequestOptions? = null
+    ): Boolean
+
+    /**
+     * Cancels an in-progress response by its ID.
+     *
+     * @param id the response ID
+     * @param requestOptions additional request options
+     * @return the cancelled response, or null if not found
+     */
+    public suspend fun cancel(
+        id: ResponseId,
+        requestOptions: RequestOptions? = null
+    ): Response?
 }

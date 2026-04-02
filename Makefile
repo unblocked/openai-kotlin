@@ -1,8 +1,8 @@
 build-maven-local:
-	@echo "Building and publishing JARs to local Maven repository (.maven)..."
-	./gradlew :openai-core:publishJvmPublicationToMavenRepository :openai-core:publishKotlinMultiplatformPublicationToMavenRepository -PRELEASE_SIGNING_ENABLED=false
-	./gradlew :openai-client:publishJvmPublicationToMavenRepository :openai-client:publishKotlinMultiplatformPublicationToMavenRepository -PRELEASE_SIGNING_ENABLED=false
-	./gradlew :openai-client-bom:publishMavenPublicationToMavenRepository -PRELEASE_SIGNING_ENABLED=false
+	@echo "Building and publishing to local Maven repository (.maven)..."
+	./gradlew :openai-core:publishJvmPublicationToMavenRepository :openai-core:publishKotlinMultiplatformPublicationToMavenRepository :openai-client:publishJvmPublicationToMavenRepository :openai-client:publishKotlinMultiplatformPublicationToMavenRepository :openai-client-bom:publishMavenPublicationToMavenRepository -PsignAllPublications=false -x dokkaHtml
+	@echo "Cleaning up unnecessary files..."
+	find .maven -type f \( -name "*.md5" -o -name "*.sha1" -o -name "*.sha256" -o -name "*.sha512" -o -name "*-javadoc.jar" -o -name "*-kotlin-tooling-metadata.json" \) -delete
 	@echo "Local JARs published to .maven directory"
 
 generate-maven-dependencies:

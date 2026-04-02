@@ -1,8 +1,10 @@
 package com.aallam.openai.client.internal.api
 
+import com.aallam.openai.api.core.DeleteResponse
 import com.aallam.openai.api.core.RequestOptions
 import com.aallam.openai.api.response.Response
 import com.aallam.openai.api.response.ResponseChunk
+import com.aallam.openai.api.response.ResponseId
 import com.aallam.openai.api.response.ResponseRequest
 import com.aallam.openai.client.Responses
 import com.aallam.openai.client.internal.extension.requestOptions
@@ -12,6 +14,7 @@ import com.aallam.openai.client.internal.http.HttpRequester
 import com.aallam.openai.client.internal.http.perform
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -21,7 +24,7 @@ import kotlinx.coroutines.flow.flow
  */
 internal class ResponsesApi(private val requester: HttpRequester) : Responses {
 
-    override suspend fun createResponse(
+    override suspend fun response(
         request: ResponseRequest,
         requestOptions: RequestOptions?
     ): Response {
@@ -35,7 +38,7 @@ internal class ResponsesApi(private val requester: HttpRequester) : Responses {
         }
     }
 
-    override fun createResponseStream(
+    override fun responseStream(
         request: ResponseRequest,
         requestOptions: RequestOptions?
     ): Flow<ResponseChunk> {
@@ -54,5 +57,38 @@ internal class ResponsesApi(private val requester: HttpRequester) : Responses {
         return flow {
             requester.perform(builder) { response -> streamEventsFrom(response) }
         }
+    }
+
+    override suspend fun response(id: ResponseId, requestOptions: RequestOptions?): Response? {
+        val response = requester.perform<HttpResponse> {
+            it.get {
+                url(path = "${ApiPath.Responses}/${id.id}")
+                requestOptions(requestOptions)
+            }
+        }
+        return if (response.status == HttpStatusCode.NotFound) null else response.body()
+    }
+
+    override suspend fun delete(id: ResponseId, requestOptions: RequestOptions?): Boolean {
+        val response = requester.perform<HttpResponse> {
+            it.delete {
+                url(path = "${ApiPath.Responses}/${id.id}")
+                requestOptions(requestOptions)
+            }
+        }
+        return when (response.status) {
+            HttpStatusCode.NotFound -> false
+            else -> response.body<DeleteResponse>().deleted
+        }
+    }
+
+    override suspend fun cancel(id: ResponseId, requestOptions: RequestOptions?): Response? {
+        val response = requester.perform<HttpResponse> {
+            it.post {
+                url(path = "${ApiPath.Responses}/${id.id}/cancel")
+                requestOptions(requestOptions)
+            }
+        }
+        return if (response.status == HttpStatusCode.NotFound) null else response.body()
     }
 }
